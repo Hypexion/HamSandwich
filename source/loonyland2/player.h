@@ -136,6 +136,8 @@
 #define KC_ONION	(22)
 #define KC_BUNNY	(24)
 
+#define MAX_SEED_SIZE 32
+
 #pragma pack(1)
 
 typedef struct player_t
@@ -253,6 +255,12 @@ typedef struct player_t
 	word arenaTime;
 	byte arenaWave;	// which wave you are on if multiple
 	word arenaSpawn;
+
+	// scrambler stuff
+	char scramblerSeed[MAX_SEED_SIZE];
+	byte scramblerMod;
+	byte skillMap[PLAYER_SKILLS];
+	byte talentMap[MAX_TALENTS];
 } player_t;
 
 extern player_t player;

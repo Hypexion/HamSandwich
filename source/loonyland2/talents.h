@@ -55,6 +55,7 @@ char *TalentName(byte n);
 talent_t *GetTalent(byte n);
 word TalentPointsNeeded(byte n);
 void LearnTalent(byte s);
+void LearnScrambledTalent(byte s);
 void TalentPoint(byte which,word amt);
 float TalentBonus(byte which);
 void TalentDecrease(void);

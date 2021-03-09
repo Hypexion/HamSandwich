@@ -314,6 +314,11 @@ void LearnTalent(byte s)
 	}
 }
 
+void LearnScrambledTalent(byte s)
+{
+	LearnTalent(player.talentMap[s]);
+}
+
 void TalentPoint(byte which,word amt)
 {
 	char txt[64];

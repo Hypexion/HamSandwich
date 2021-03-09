@@ -162,6 +162,7 @@ skill_t *GetSkill(byte n);
 byte PickSkillToBoost(byte type);
 
 void LearnSkill(byte s);
+void LearnScrambledSkill(byte s);
 byte SkillDodgeRate(void);
 word SkillTrainingAmount(void);
 word SkillStunAmount(void);

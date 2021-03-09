@@ -1372,6 +1372,11 @@ void LearnSkill(byte s)
 	}
 }
 
+void LearnScrambledSkill(byte s)
+{
+	LearnSkill(player.skillMap[s - 1]);
+}
+
 word SkillTrainingAmount(void)
 {
 	int i;

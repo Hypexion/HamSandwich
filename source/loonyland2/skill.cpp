@@ -1433,6 +1433,11 @@ byte SkillHave(byte s)
 	return 0;
 }
 
+byte ScrambledSkillHave(byte s)
+{
+	return SkillHave(player.skillMap[s - 1]);
+}
+
 byte HaveTwoOfASchool(void)
 {
 	int i;

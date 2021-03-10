@@ -11,6 +11,7 @@
 #include "madcap.h"
 #include "achieve.h"
 #include "services.h"
+#include "scrambler.h"
 
 // characters
 #include "ch_loony.h"
@@ -53,6 +54,15 @@ void InitPlayer(byte initWhat,byte world,byte level)
 		SortEquipment();
 		InitialSkills();
 		InitialTalents();
+
+		std::string seed = GetSavedScrambleSeed();
+		if (seed.length() == 0) {
+			seed = timeGetTime();
+			seed.resize(MAX_SEED_SIZE);
+		}
+		Scrambler scrambler(seed);
+		scrambler.performScramble();
+		strcpy(player.scramblerSeed, seed.c_str());
 
 		player.startHearts=10;
 		player.startMagic=10;
@@ -453,7 +463,7 @@ byte PlayerGetItem(byte itm,int val1,int val2)
 			return 0;
 			break;
 		case IT_SCROLL:
-			LearnSkill((byte)val1);
+			LearnScrambledSkill((byte)val1);
 			TipEvent(TIP_SKILL);
 			if(HaveTwoOfASchool())
 				TipEvent(TIP_SYNERGY);

@@ -3682,17 +3682,17 @@ void DoChatAction(byte a)
 		case 24:
 			// assign Talent quest and give talent and vanish in a puff of smoke
 			PlayerSetVar(VAR_QUESTASSIGN+QUEST_GURU,1);
-			LearnTalent(player.var[VAR_GURUTALENT]);
+			LearnScrambledTalent(player.var[VAR_GURUTALENT]);
 			GuruVanish();
 			break;
 		case 25:
 			// give talent and vanish in a puff of smoke
-			LearnTalent(player.var[VAR_GURUTALENT]);
+			LearnScrambledTalent(player.var[VAR_GURUTALENT]);
 			GuruVanish();
 			break;
 		case 26:
 			// give talent and vanish in a puff of smoke and complete quest
-			LearnTalent(player.var[VAR_GURUTALENT]);
+			LearnScrambledTalent(player.var[VAR_GURUTALENT]);
 			GuruVanish();
 			PlayerSetVar(VAR_QUESTDONE+QUEST_GURU,1);
 			break;

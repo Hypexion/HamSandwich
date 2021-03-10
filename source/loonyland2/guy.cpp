@@ -3379,7 +3379,7 @@ void AddMapGuys(Map *map)
 				{
 					if(map->badguy[i].type==MONS_PUPPET2 && player.var[VAR_MAGICHAT])
 					{
-						if(!SkillHave(SKILL_DEFENSE))
+						if(!ScrambledSkillHave(SKILL_DEFENSE))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_DEFENSE;
@@ -3388,7 +3388,7 @@ void AddMapGuys(Map *map)
 					}
 					else if(map->badguy[i].type==MONS_MOUSE3 && player.var[VAR_RATBOSS])
 					{
-						if(!SkillHave(SKILL_RESTORE))
+						if(!ScrambledSkillHave(SKILL_RESTORE))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_RESTORE;
@@ -3397,7 +3397,7 @@ void AddMapGuys(Map *map)
 					}
 					else if(map->badguy[i].type==MONS_MONKEY2 && player.var[VAR_STINKYSOCK])
 					{
-						if(!SkillHave(SKILL_POISON))
+						if(!ScrambledSkillHave(SKILL_POISON))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_POISON;
@@ -3410,7 +3410,7 @@ void AddMapGuys(Map *map)
 							continue;	// don't add him at all
 						else if(player.var[VAR_QUESTDONE+QUEST_BIGBEAR])
 						{
-							if(!SkillHave(SKILL_BERSERK))
+							if(!ScrambledSkillHave(SKILL_BERSERK))
 							{
 								map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 								map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_BERSERK;
@@ -3418,9 +3418,10 @@ void AddMapGuys(Map *map)
 							continue;
 						}
 					}
-					else if(map->badguy[i].type==MONS_VILLAGER && tag==12 && player.talentLevel[map->map[map->badguy[i].x+(map->badguy[i].y+1)*map->width].tag]!=255)
+					else if(map->badguy[i].type==MONS_VILLAGER && tag==12)
 					{
-						if(player.levelNum!=LVL_GURUCABIN)
+						byte talentTag = map->map[map->badguy[i].x + (map->badguy[i].y + 1) * map->width].tag;
+						if (player.talentLevel[player.talentMap[talentTag]] != 255 && player.levelNum != LVL_GURUCABIN)
 							continue;	// remove gurus that you have the talent for already
 					}
 					else if(map->badguy[i].type==MONS_VILLAGER && tag==9 && player.var[VAR_WIFEUNLOCK])
@@ -3437,7 +3438,7 @@ void AddMapGuys(Map *map)
 						continue;	// balloonist only appears in Baskerville prior to quest completion
 					else if(map->badguy[i].type==MONS_ROSE && player.var[VAR_STONEROSE])
 					{
-						if(!SkillHave(SKILL_BRAMBLES))
+						if(!ScrambledSkillHave(SKILL_BRAMBLES))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_BRAMBLES;
@@ -3446,7 +3447,7 @@ void AddMapGuys(Map *map)
 					}
 					else if(map->badguy[i].type==MONS_BURNINGBUSH && player.var[VAR_BUSHDEAD])
 					{
-						if(!SkillHave(SKILL_BURNINATE))
+						if(!ScrambledSkillHave(SKILL_BURNINATE))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_BURNINATE;
@@ -3455,7 +3456,7 @@ void AddMapGuys(Map *map)
 					}
 					else if(map->badguy[i].type==MONS_TRIGUN && player.var[VAR_TRIGUNDEAD])
 					{
-						if(!SkillHave(SKILL_TRIPLE))
+						if(!ScrambledSkillHave(SKILL_TRIPLE))
 						{
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 							map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_TRIPLE;
@@ -3512,7 +3513,7 @@ void AddMapGuys(Map *map)
 						continue;
 					else if(map->badguy[i].type==MONS_BOKBOK && player.var[VAR_BOKFOUND+map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag-1])
 						continue;	// remove bokboks found
-					else if(map->badguy[i].type==MONS_FURNACE && player.var[VAR_FURNACE] && !SkillHave(SKILL_HEATSHIELD))
+					else if(map->badguy[i].type==MONS_FURNACE && player.var[VAR_FURNACE] && !ScrambledSkillHave(SKILL_HEATSHIELD))
 					{
 						map->map[map->badguy[i].x+(map->badguy[i].y+4)*map->width].item=IT_SCROLL;
 						map->map[map->badguy[i].x+(map->badguy[i].y+4)*map->width].tag=SKILL_HEATSHIELD;
@@ -3533,35 +3534,35 @@ void AddMapGuys(Map *map)
 								}
 								break;
 							case 2:
-								if(!SkillHave(SKILL_LUCK))
+								if(!ScrambledSkillHave(SKILL_LUCK))
 								{
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_LUCK;
 								}
 								break;
 							case 4:
-								if(!SkillHave(SKILL_PERSUADE))
+								if(!ScrambledSkillHave(SKILL_PERSUADE))
 								{
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_PERSUADE;
 								}
 								break;
 							case 6:
-								if(!SkillHave(SKILL_TURRET))
+								if(!ScrambledSkillHave(SKILL_TURRET))
 								{
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_TURRET;
 								}
 								break;
 							case 8:
-								if(!SkillHave(SKILL_ICECUBE))
+								if(!ScrambledSkillHave(SKILL_ICECUBE))
 								{
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_ICECUBE;
 								}
 								break;
 							case 10:
-								if(!SkillHave(SKILL_PLAGUE))
+								if(!ScrambledSkillHave(SKILL_PLAGUE))
 								{
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].item=IT_SCROLL;
 									map->map[map->badguy[i].x+map->badguy[i].y*map->width].tag=SKILL_PLAGUE;
@@ -4195,7 +4196,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			break;
 		case MONS_MOUSE3:	// ratatouille
 			player.var[VAR_RATBOSS]=1;
-			if(!SkillHave(SKILL_RESTORE))
+			if(!ScrambledSkillHave(SKILL_RESTORE))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4208,7 +4209,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 				PlayerSetVar(VAR_TOYSDEAD,player.var[VAR_TOYSDEAD]+1);;
 			break;
 		case MONS_PUPPET2:	// Magic Hat boss
-			if(!SkillHave(SKILL_DEFENSE))
+			if(!ScrambledSkillHave(SKILL_DEFENSE))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4222,7 +4223,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			player.var[VAR_MAGICHAT]=1;
 			break;
 		case MONS_MONKEY2:	// stinky sock boss
-			if(!SkillHave(SKILL_POISON))
+			if(!ScrambledSkillHave(SKILL_POISON))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4236,7 +4237,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			player.var[VAR_STINKYSOCK]=1;
 			break;
 		case MONS_ROSE:	// Stone Rose boss
-			if(!SkillHave(SKILL_BRAMBLES))
+			if(!ScrambledSkillHave(SKILL_BRAMBLES))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4260,7 +4261,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			player.var[VAR_KLONKDEAD]=1;
 			break;
 		case MONS_TEDDY3:	// berserker bear boss
-			if(!SkillHave(SKILL_BERSERK))
+			if(!ScrambledSkillHave(SKILL_BERSERK))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4277,7 +4278,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			PlayerSetVar(VAR_QUESTDONE+QUEST_FACTORY2,1);
 			break;
 		case MONS_BURNINGBUSH:
-			if(!SkillHave(SKILL_BURNINATE))
+			if(!ScrambledSkillHave(SKILL_BURNINATE))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4289,7 +4290,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 			player.var[VAR_BUSHDEAD]=1;
 			break;
 		case MONS_TRIGUN:
-			if(!SkillHave(SKILL_TRIPLE))
+			if(!ScrambledSkillHave(SKILL_TRIPLE))
 			{
 				b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 				if(b)
@@ -4326,7 +4327,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 					}
 					break;
 				case 2:
-					if(!SkillHave(SKILL_LUCK))
+					if(!ScrambledSkillHave(SKILL_LUCK))
 					{
 						b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 						if(b)
@@ -4337,7 +4338,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 					}
 					break;
 				case 4:
-					if(!SkillHave(SKILL_PERSUADE))
+					if(!ScrambledSkillHave(SKILL_PERSUADE))
 					{
 						b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 						if(b)
@@ -4348,7 +4349,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 					}
 					break;
 				case 6:
-					if(!SkillHave(SKILL_TURRET))
+					if(!ScrambledSkillHave(SKILL_TURRET))
 					{
 						b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 						if(b)
@@ -4359,7 +4360,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 					}
 					break;
 				case 8:
-					if(!SkillHave(SKILL_ICECUBE))
+					if(!ScrambledSkillHave(SKILL_ICECUBE))
 					{
 						b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 						if(b)
@@ -4370,7 +4371,7 @@ void BadguyDrop(byte guytype,byte level,int x,int y)
 					}
 					break;
 				case 10:
-					if(!SkillHave(SKILL_PLAGUE))
+					if(!ScrambledSkillHave(SKILL_PLAGUE))
 					{
 						b=FireBullet(goodguy->ID,x,y,FIXAMT*15,rand()%256,BLT_ITEM,0);
 						if(b)

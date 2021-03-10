@@ -168,6 +168,7 @@ word SkillTrainingAmount(void);
 word SkillStunAmount(void);
 byte SkillHaveASpell(void);
 byte SkillHave(byte s);
+byte ScrambledSkillHave(byte s);
 
 byte PlagueOn(void);
 byte HeatShieldOn(void);

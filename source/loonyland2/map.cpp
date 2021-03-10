@@ -118,7 +118,7 @@ void Map::Init(world_t *wrld)
 	for(i=0;i<width*height;i++)
 	{
 		map[i].templight=-32;	// make it all black so it'll fade in
-		if(map[i].item==IT_SCROLL && SkillHave(map[i].tag))
+		if(map[i].item==IT_SCROLL && ScrambledSkillHave(map[i].tag))
 			map[i].item=IT_NONE;	// remove scrolls you've already gotten
 		if(map[i].item==IT_TOOLBOX && (GotItem(IT_TOOLBOX)>0 || player.var[VAR_QUESTDONE+QUEST_HANDY]))
 			map[i].item=IT_NONE;

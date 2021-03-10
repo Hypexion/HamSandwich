@@ -195,6 +195,7 @@ void GetSavesForMenu(void)
 			save[n].mod[0]=p.var[VAR_MODIFIER+0];
 			save[n].mod[1]=p.var[VAR_MODIFIER+1];
 			save[n].mod[2]=p.var[VAR_MODIFIER+2];
+			save[n].scrambleSeed = p.scramblerSeed;
 			strcpy(save[n].name,p.profile);
 			save[n].campName[0]='\0';
 			for(j=1;j<addOnCount;j++)
@@ -317,6 +318,7 @@ void ShowCharacter(int x,int y,byte n,byte on,MGLDraw *mgl)
 		PauseBox(x,y,x+250,y+100,234);
 		CenterPrintGlow(x+125,y+2,save[n].name,0,0);
 		CenterPrintGlow(x+125,y+28,ModifierList(n),0,1);
+		CenterPrintGlow(x+125,y+42,save[n].scrambleSeed.c_str(),0,1);
 		yy=y+53;
 		if(save[n].campName[0]!='\0')
 		{

@@ -31,10 +31,12 @@ typedef struct save_t
 	float percentage;
 	byte mod[3];
 	char campName[64];
+	std::string scrambleSeed;
 } save_t;
 
 static byte oldc=0;
 static byte saveMod[3];
+static std::string saveScrambleSeed;
 
 byte gameToLoad;
 static word timeToCred;
@@ -399,46 +401,53 @@ void NewCharDisplay(MGLDraw *mgl)
 
 	flip=1-flip;
 
-	PauseBox(120,50,520,400,234);
+	PauseBox(120,50,520,440,234);
 	CenterPrintGlow(320,58,"New Game",0,0);
 
 	NewCharButton(125,100,(subcursor==0),"Name",mgl);
+	NewCharButton(125,140,(subcursor==1),"Seed",mgl);
 
-	NewCharButton(125,140,(subcursor==1),"Mod1",mgl);
-	PrintDark(250,145,ModifierName(save[curChar].mod[0]),0);
-	NewCharButton(125,180,(subcursor==2),"Mod2",mgl);
-	PrintDark(250,185,ModifierName(save[curChar].mod[1]),0);
-	NewCharButton(125,220,(subcursor==3),"Mod3",mgl);
-	PrintDark(250,225,ModifierName(save[curChar].mod[2]),0);
+	NewCharButton(125,180,(subcursor==2),"Mod1",mgl);
+	PrintDark(250,185,ModifierName(save[curChar].mod[0]),0);
+	NewCharButton(125,220,(subcursor==3),"Mod2",mgl);
+	PrintDark(250,225,ModifierName(save[curChar].mod[1]),0);
+	NewCharButton(125,260,(subcursor==4),"Mod3",mgl);
+	PrintDark(250,265,ModifierName(save[curChar].mod[2]),0);
 
 	switch(subcursor)
 	{
 		case 0:
-			PrintRectBlack2(125,265,515,350,"Type in a name for this profile.  Up and Down will select other options.",14,1);
+			PrintRectBlack2(125,305,515,390,"Type in a name for this profile.  Up and Down will select other options.",14,1);
 			break;
 		case 1:
+			PrintRectBlack2(125, 305, 515, 390, "Type in a scrambler seed for this profile.", 14, 1);
+			break;
 		case 2:
 		case 3:
-			PrintRectBlack2(125,265,515,320,"Press Left or Right to flip through Modifiers.  You may apply up to 3 Modifiers to your game.  You'll unlock more as you play.",14,1);
-			PrintRectBlack2(125,320,515,355,ModifierDesc(save[curChar].mod[subcursor-1]),14,1);
-			break;
 		case 4:
+			PrintRectBlack2(125,305,515,360,"Press Left or Right to flip through Modifiers.  You may apply up to 3 Modifiers to your game.  You'll unlock more as you play.",14,1);
+			PrintRectBlack2(125,360,515,395,ModifierDesc(save[curChar].mod[subcursor-2]),14,1);
+			break;
+		case 5:
 #ifdef DIRECTORS
-			PrintRectBlack2(125,265,515,350,"Press Left or Right to choose which campaign to play.  \"Original\" is the normal game.  Any other campaign is at your own risk!  Press Fire to start playing!!  Or ESC to cancel.",14,1);
+			PrintRectBlack2(125,305,515,390,"Press Left or Right to choose which campaign to play.  \"Original\" is the normal game.  Any other campaign is at your own risk!  Press Fire to start playing!!  Or ESC to cancel.",14,1);
 #else
-			PrintRectBlack2(125,265,515,350,"Press Fire to start playing!!  Or ESC to cancel.",14,1);
+			PrintRectBlack2(125,305,515,390,"Press Fire to start playing!!  Or ESC to cancel.",14,1);
 #endif
 			break;
 	}
 
 	PrintDark(250,105,save[curChar].name,0);
+	PrintDark(250,145,save[curChar].scrambleSeed.c_str(),0);
 	if(flip && subcursor==0)
 		PrintDark(250+GetStrLength(save[curChar].name,0),105,"_",0);
+	if (flip && subcursor == 1)
+		PrintDark(250 + GetStrLength(save[curChar].scrambleSeed.c_str(), 0), 145, "_", 0);
 
-	NewCharButton(125,355,(subcursor==4),"Go!",mgl);
+	NewCharButton(125,395,(subcursor==5),"Go!",mgl);
 #ifdef DIRECTORS
-	PrintDark(230,360,"Campaign to play:",1);
-	PrintDark(230,376,addOnList[addOnChoice].dispName,1);
+	PrintDark(230,400,"Campaign to play:",1);
+	PrintDark(230,416,addOnList[addOnChoice].dispName,1);
 #endif
 }
 
@@ -694,14 +703,14 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 			if((c&CONTROL_UP) && !(oldc&CONTROL_UP))
 			{
 				subcursor--;
-				if(subcursor>4)
-					subcursor=4;
+				if(subcursor>5)
+					subcursor=5;
 				MakeNormalSound(SND_MENUCLICK);
 			}
 			if((c&CONTROL_DN) && !(oldc&CONTROL_DN))
 			{
 				subcursor++;
-				if(subcursor>4)
+				if(subcursor>5)
 					subcursor=0;
 				MakeNormalSound(SND_MENUCLICK);
 			}
@@ -709,11 +718,11 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 			{
 				if(subcursor>=1 && subcursor<=3)
 				{
-					AdjustModifier(&save[curChar].mod[subcursor-1],subcursor-1,-1,save[curChar].mod);
+					AdjustModifier(&save[curChar].mod[subcursor-2],subcursor-2,-1,save[curChar].mod);
 					MakeNormalSound(SND_MENUCLICK);
 				}
 #ifdef DIRECTORS
-				if(subcursor==4)
+				if(subcursor==5)
 				{
 					addOnChoice--;
 					while(addOnChoice<0 || addOnChoice>=addOnCount || (addOnList[addOnChoice].filename[0]=='\0' && addOnChoice!=0))
@@ -723,13 +732,13 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 			}
 			if((c&CONTROL_RT) && !(oldc&CONTROL_RT))
 			{
-				if(subcursor>=1 && subcursor<=3)
+				if(subcursor>=2 && subcursor<=4)
 				{
-					AdjustModifier(&save[curChar].mod[subcursor-1],subcursor-1,1,save[curChar].mod);
+					AdjustModifier(&save[curChar].mod[subcursor-2],subcursor-2,1,save[curChar].mod);
 					MakeNormalSound(SND_MENUCLICK);
 				}
 #ifdef DIRECTORS
-				if(subcursor==4)
+				if(subcursor==5)
 				{
 					addOnChoice++;
 					while(addOnChoice<0 || addOnChoice>=addOnCount || (addOnList[addOnChoice].filename[0]=='\0' && addOnChoice!=0))
@@ -743,17 +752,18 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 				{
 					case 0:	// don't do anything, just enter that name
 						break;
-					case 1:	// modifiers
-					case 2:
+					case 2:	// modifiers
 					case 3:
+					case 4:
 						break;
-					case 4:	// go!
+					case 5:	// go!
 						MakeNormalSound(SND_MENUSELECT);
 						gameToLoad=save[curChar].realNum;
 						strcpy(saveName,save[curChar].name);
 						saveMod[0]=save[curChar].mod[0];
 						saveMod[1]=save[curChar].mod[1];
 						saveMod[2]=save[curChar].mod[2];
+						saveScrambleSeed = save[curChar].scrambleSeed;
 						CO_RETURN MENU_NEWCHAR;
 						break;
 				}
@@ -765,12 +775,16 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 				submode=0;
 				cursor=0;
 			}
-			if(k==8 && subcursor==0)
+			if(k==8)
 			{
 				// backspace
-				if(strlen(save[curChar].name)>0)
+				if(subcursor == 0 && strlen(save[curChar].name)>0)
 				{
 					save[curChar].name[strlen(save[curChar].name)-1]='\0';
+					MakeNormalSound(SND_MENUCLICK);
+				}
+				else if (subcursor == 1 && save[curChar].scrambleSeed.length() > 0) {
+					save[curChar].scrambleSeed.pop_back();
 					MakeNormalSound(SND_MENUCLICK);
 				}
 			}
@@ -779,16 +793,26 @@ TASK(byte) MainMenuUpdate(int *lastTime,MGLDraw *mgl)
 				MakeNormalSound(SND_MENUCLICK);
 				subcursor=1;
 			}
-			if((k>='a' && k<='z') || (k>='A' && k<='Z') || (k>='0' && k<='9') && subcursor==0)
+			if((k>='a' && k<='z') || (k>='A' && k<='Z') || (k>='0' && k<='9'))
 			{
-				if(strlen(save[curChar].name)<10)
-				{
-					MakeNormalSound(SND_MENUCLICK);
-					save[curChar].name[strlen(save[curChar].name)+1]='\0';
-					save[curChar].name[strlen(save[curChar].name)]=k;
+				if (subcursor == 0) {
+					if (strlen(save[curChar].name) < 10)
+					{
+						MakeNormalSound(SND_MENUCLICK);
+						save[curChar].name[strlen(save[curChar].name) + 1] = '\0';
+						save[curChar].name[strlen(save[curChar].name)] = k;
+					}
+					else
+						MakeNormalSound(SND_MENUCANCEL);
 				}
-				else
-					MakeNormalSound(SND_MENUCANCEL);
+				else if (subcursor == 1) {
+					if (save[curChar].scrambleSeed.length() < MAX_SEED_SIZE) {
+						MakeNormalSound(SND_MENUCLICK);
+						save[curChar].scrambleSeed += k;
+					}
+					else
+						MakeNormalSound(SND_MENUCANCEL);
+				}
 			}
 		}
 
@@ -841,4 +865,9 @@ char *GetSavedName(void)
 byte GetSavedMod(byte n)
 {
 	return saveMod[n];
+}
+
+std::string GetSavedScrambleSeed()
+{
+	return saveScrambleSeed;
 }

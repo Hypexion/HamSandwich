@@ -3,6 +3,7 @@
 
 #include "winpch.h"
 #include "display.h"
+#include <string>
 #pragma pack(1)
 
 #define MAX_CHARS	(32)
@@ -42,6 +43,7 @@ extern byte gameToLoad;
 TASK(byte) MainMenu(MGLDraw *mgl);
 char *GetSavedName(void);
 byte GetSavedMod(byte n);
+std::string GetSavedScrambleSeed();
 void DeleteCharacter(void);
 char *FetchAddOnName(void);
 

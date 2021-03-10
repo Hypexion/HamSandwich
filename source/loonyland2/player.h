@@ -136,7 +136,7 @@
 #define KC_ONION	(22)
 #define KC_BUNNY	(24)
 
-#define MAX_SEED_SIZE 32
+#define MAX_SEED_SIZE 16
 
 #pragma pack(1)
 

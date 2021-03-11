@@ -3,119 +3,146 @@ dofile "tools/build/gmake2_deps.lua"
 dofile "tools/build/android_studio.lua"
 dofile "tools/build/emscripten.lua"
 dofile "tools/build/vscode.lua"
+dofile "tools/build/run-config.lua"
+dofile "tools/build/recursive-links.lua"
+
+sdl2_platforms = {
+	x86 = "x86",
+	x86_64 = "x64",
+}
+
+local is_msvc = _ACTION and _ACTION:sub(1, 4) == "vs20"
+
+local toolset
+if _OPTIONS.cc then
+	toolset = _OPTIONS.cc
+elseif not is_mscv and (_OPTIONS.os or _TARGET_OS) == premake.MACOSX then
+	toolset = "clang"
+else
+	local current = premake.action.current()
+	toolset = current and current.toolset or "gcc"
+end
 
 workspace "HamSandwich"
-	location "build"
-	configurations { "debug", "release", "debug64", "release64" }
+	location("build/" .. toolset)
+	configurations { "debug", "release" }
+	platforms { "x86", "x86_64" }
 
 	filter { "action:android-studio" }
 		location "build/android"
 		android_abis { "armeabi-v7a" }
 
-local _current_project
-function base_project(name)
-	_current_project = name
-	project(name)
-		kind "WindowedApp"
-		language "C++"
+function base_project()
+	language "C++"
+	cppdialect "C++17"
+	architecture "x86"
+	targetdir "%{wks.location}/%{cfg.buildcfg}-%{cfg.platform}/%{prj.name}/"
+	objdir "%{cfg.targetdir}/obj/"
+
+	files {
+		"source/%{prj.name}/**.h",
+		"source/%{prj.name}/**.cpp",
+		"source/%{prj.name}/**.c",
+	}
+
+	filter "platforms:x86_64"
+		architecture "x86_64"
+
+	filter "configurations:debug"
+		kind "ConsoleApp"
+		defines { "_DEBUG" }
+		symbols "On"
+
+	filter "configurations:release"
+		defines { "NDEBUG" }
+		optimize "On"
+
+	filter { "toolset:gcc", "system:Windows" }
+		linkoptions { "-static-libgcc", "-static-libstdc++" }
+
+	filter "action:vs20*"
 		cppdialect "C++17"
-		architecture "x86"
-		targetdir "%{wks.location}/%{cfg.toolset}-%{cfg.buildcfg}/%{prj.name}/"
-		objdir "%{cfg.targetdir}/obj/"
-
-		-- These emulate the `./run` script when running within VS.
-		debugdir "%{wks.location}/game/%{prj.name}"
-		debugargs { "window" }
-
-		defines { 'PROJECT_NAME="%{prj.name}"' }
-
-		files {
-			"source/%{prj.name}/**.h",
-			"source/%{prj.name}/**.cpp",
-			"source/%{prj.name}/**.c",
+		defines { "_CRT_SECURE_NO_WARNINGS", "NOMINMAX", "SDL_UNPREFIXED" }
+		-- The MSVC dependency script puts the SDL2 binaries here.
+		includedirs {
+			"build/SDL2-msvc/include",
+			"build/SDL2_mixer-msvc/include",
+			"build/SDL2_image-msvc/include",
+			"build/zlib-1.2.11",
+		}
+		libdirs {
+			"build/SDL2-msvc/lib/%{sdl2_platforms[cfg.platform]}",
+			"build/SDL2_mixer-msvc/lib/%{sdl2_platforms[cfg.platform]}",
+			"build/SDL2_image-msvc/lib/%{sdl2_platforms[cfg.platform]}",
 		}
 
-		filter "configurations:*64"
-			architecture "x86_64"
+	filter "action:android-studio"
+		defines { "SDL_UNPREFIXED" }
+		buildoptions { "-fsigned-char", "-fexceptions" }
 
-		filter "configurations:debug*"
-			kind "ConsoleApp"
-			defines { "_DEBUG" }
-			symbols "On"
-
-		filter "configurations:release*"
-			defines { "NDEBUG" }
-			optimize "On"
-
-		filter { "toolset:gcc", "system:Windows" }
-			linkoptions { "-static-libgcc", "-static-libstdc++" }
-
-		filter "action:vs20*"
-			cppdialect "C++17"
-			defines { "_CRT_SECURE_NO_WARNINGS", "NOMINMAX", "SDL_UNPREFIXED" }
-			-- The MSVC dependency script puts the SDL2 binaries here.
-			includedirs {
-				"build/SDL2-msvc/include",
-				"build/SDL2_mixer-msvc/include",
-				"build/SDL2_image-msvc/include",
-				"build/zlib-1.2.11",
-			}
-			libdirs {
-				"build/SDL2-msvc/lib/x86",
-				"build/SDL2_mixer-msvc/lib/x86",
-				"build/SDL2_image-msvc/lib/x86",
-				"build/zlib",
-			}
-			debugenvs { "PATH=$(ProjectDir)/lib/x86/;%PATH%" }
-
-		filter "action:android-studio"
-			defines { "SDL_UNPREFIXED" }
-			buildoptions { "-fsigned-char", "-fexceptions" }
-
-		filter { "toolset:emcc", "configurations:debug*" }
-			linkoptions { "--emrun" }
-
-		filter { "toolset:emcc" }
-			linkoptions {
-				"-s ALLOW_MEMORY_GROWTH=1",
-				"--use-preload-cache",
-				"-s ENVIRONMENT=web",
-				"-s FORCE_FILESYSTEM=1",
-				"-s EXTRA_EXPORTED_RUNTIME_METHODS=['ENV']"
-			}
-
-			-- coroutine support
-			defines { "USE_COROUTINES" }
-			buildoptions { "-fcoroutines-ts", "-Werror=unused-result" }
-
-		filter {}
-end
-
-function library(name)
-	base_project(name)
-		kind "StaticLib"
-end
-
-function sdl2_project(name)
-	base_project(name)
-		-- Android application metadata.
-		android_package "com.platymuus.hamsandwich.%{prj.name}"
-		android_assetdirs {
-			"build/assets/%{prj.name}/",
-			"assets/android/",
+	filter { "toolset:emcc" }
+		linkoptions {
+			"-s ALLOW_MEMORY_GROWTH=1",
+			"--use-preload-cache",
+			"-s ENVIRONMENT=web",
+			"-s FORCE_FILESYSTEM=1",
+			"-s EXTRA_EXPORTED_RUNTIME_METHODS=['ENV']"
 		}
 
-		-- Emscripten metadata.
-		webfiles "assets/emscripten/*"
+		-- coroutine support
+		defines { "USE_COROUTINES" }
+		buildoptions { "-fcoroutines-ts", "-Werror=unused-result" }
 
-		-- Link SDL2 in the correct sequence.
-		filter { "system:Windows", "not action:vs*", "toolset:not emcc" }
-			links "mingw32"
-		filter { "system:Windows", "toolset:not emcc" }
-			links { "ws2_32", "winmm" }
-		filter {}
+	filter {}
+end
 
-		links { "SDL2main", "SDL2", "SDL2_mixer", "SDL2_image" }
+function sdl2_project()
+	base_project()
+
+	defines { 'PROJECT_NAME="%{prj.name}"' }
+
+	kind "WindowedApp"
+	filter "configurations:debug"
+		kind "ConsoleApp"
+	filter {}
+
+	-- These emulate the `./run` script when running within VS.
+	debugdir "%{wks.location}/../game/%{prj.name}"
+	debugargs { "window" }
+
+	filter "toolset:emcc"
+		debugdir "%{cfg.targetdir}"
+	filter "action:vs20*"
+		debugenvs {
+			"PATH=" ..
+				"$(ProjectDir)/../SDL2-msvc/lib/%{sdl2_platforms[cfg.platform]}/;" ..
+				"$(ProjectDir)/../SDL2_mixer-msvc/lib/%{sdl2_platforms[cfg.platform]}/;" ..
+				"$(ProjectDir)/../SDL2_image-msvc/lib/%{sdl2_platforms[cfg.platform]}/;" ..
+				"%PATH%",
+		}
+	filter {}
+
+	-- Android application metadata.
+	android_package "com.platymuus.hamsandwich.%{prj.name}"
+	android_assetdirs {
+		"build/assets/%{prj.name}/",
+		"assets/android/",
+	}
+
+	-- Emscripten metadata.
+	webfiles "assets/emscripten/*"
+	filter { "toolset:emcc", "configurations:debug" }
+		linkoptions { "--emrun" }
+	filter {}
+
+	-- Link SDL2 in the correct sequence.
+	filter { "system:Windows", "not action:vs*", "toolset:not emcc" }
+		links "mingw32"
+	filter { "system:Windows", "toolset:not emcc" }
+		links { "ws2_32", "winmm" }
+	filter {}
+
+	links { "SDL2main", "SDL2", "SDL2_mixer", "SDL2_image" }
 end
 
 function excludefiles(files)
@@ -144,7 +171,7 @@ function icon_file(icon)
 
 	filter { "system:not Windows or toolset:emcc", "files:**.rc" }
 		buildmessage "%{file.name}"
-		buildcommands { 'python3 ../tools/build/rescomp.py "%{file.path}" "%{cfg.objdir}/%{file.basename}.rc.cpp"' }
+		buildcommands { 'python3 ../../tools/build/rescomp.py "%{file.path}" "%{cfg.objdir}/%{file.basename}.rc.cpp"' }
 		buildoutputs { "%{cfg.objdir}/" .. icon .. ".rc.cpp" }
 		buildinputs { "tools/build/rescomp.py" }
 
@@ -164,47 +191,42 @@ function pch(name)
 	filter {}
 end
 
-local _recursive_links = {}
-local _original_links = links
-function links(name)
-	if type(name) == 'table' then
-		for _, v in ipairs(name) do
-			links(v)
-		end
-		return
+if is_msvc then
+	local function nmake_command(args)
+		return 'cmd /C "mkdir %{cfg.targetdir} & cd %{cfg.targetdir} & nmake TOP=../../../zlib-1.2.11 -f ../../../zlib-1.2.11/win32/Makefile.msc ' .. args .. '"'
 	end
 
-	local our_links = _recursive_links[_current_project]
-	if our_links == nil then
-		our_links = {}
-		_recursive_links[_current_project] = our_links
-	end
-	table.insert(our_links, name)
+	project "z"
+		kind "Makefile"
+		targetdir "%{wks.location}/%{cfg.buildcfg}-%{cfg.platform}/%{prj.name}/"
+		objdir "%{cfg.targetdir}/"
+		targetname "zlib.lib"
 
-	_original_links(name)
-	local their_links = _recursive_links[name]
-	if their_links ~= nil then
-		includedirs { "source/" .. name }
-		for _, v in ipairs(their_links) do
-			_original_links(v)
-			table.insert(our_links, v)
-		end
-	end
+		dependson { "%{wks.location}/%{cfg.buildcfg}-%{cfg.platform}/z/zlib.lib" }
+
+		buildcommands { nmake_command "%{cfg.targetname}" }
+		rebuildcommands { nmake_command "/A %{cfg.targetname}" }
+		cleancommands { nmake_command "clean" }
 end
 
-library "libextract"
-	links { "SDL2", "z" }
+project "vanilla_extract"
+	base_project()
+	kind "StaticLib"
+	dependson { "SDL2", "z" }
 
 	filter "action:not vs20*"
 		buildoptions { "-Wall", "-Wextra" }
 
-library "ham"
-	links { "libextract", "SDL2", "SDL2_mixer", "SDL2_image" }
+project "ham"
+	base_project()
+	kind "StaticLib"
+	dependson { "vanilla_extract", "SDL2", "SDL2_mixer", "SDL2_image" }
 
 	filter "action:not vs20*"
 		buildoptions { "-Wall", "-Wextra" }
 
-sdl2_project "lunatic"
+project "lunatic"
+	sdl2_project()
 	android_appname "Dr. Lunatic"
 	icon_file "lunatic"
 	links "ham"
@@ -222,7 +244,8 @@ sdl2_project "lunatic"
 	filter "action:not vs20*"
 		buildoptions { "-Wall", "-Wextra", "-Wno-unused-parameter" }
 
-sdl2_project "supreme"
+project "supreme"
+	sdl2_project()
 	android_appname "Supreme With Cheese"
 	icon_file "lunatic"
 	links "ham"
@@ -255,7 +278,8 @@ sdl2_project "supreme"
 			"-Wno-unused-but-set-variable",
 		}
 
-sdl2_project "sleepless"
+project "sleepless"
+	sdl2_project()
 	android_appname "Sleepless Hollow"
 	icon_file "lunatic"
 	links "ham"
@@ -287,7 +311,8 @@ sdl2_project "sleepless"
 			"-Wno-unused-but-set-variable",
 		}
 
-sdl2_project "loonyland"
+project "loonyland"
+	sdl2_project()
 	android_appname "Loonyland: Halloween Hill"
 	web_title "Loonyland"
 	icon_file "loonyland"
@@ -309,7 +334,8 @@ sdl2_project "loonyland"
 
 	webfiles { ["splash.jpg"] = "assets/splashes/loonyland.jpg" }
 
-sdl2_project "loonyland2"
+project "loonyland2"
+	sdl2_project()
 	android_appname "Loonyland 2: Winter Woods"
 	web_title "Loonyland 2"
 	icon_file "loonyland2"
@@ -335,7 +361,8 @@ sdl2_project "loonyland2"
 
 	webfiles { ["splash.jpg"] = "assets/splashes/loonyland2.jpg" }
 
-sdl2_project "mystic"
+project "mystic"
+	sdl2_project()
 	android_appname "Kid Mystic"
 	icon_file "mystic"
 	links "ham"

@@ -77,6 +77,15 @@ emcc = table.merge(clang, {
 	getports = function(cfg, subtab)
 		local ports = {}
 
+		for _, lib in ipairs(cfg.dependson) do
+			local flags = emcc.ports[lib]
+			if flags then
+				flags = flags[subtab]
+				if flags then
+					table.move(flags, 1, #flags, 1 + #ports, ports)
+				end
+			end
+		end
 		for _, lib in ipairs(cfg.links) do
 			local flags = emcc.ports[lib]
 			if flags then
@@ -203,13 +212,13 @@ function emscripten._web_asset_makesettings(prj)
 		local files = emscripten.decode_webfiles(prj.webfiles)
 		local output = "# Begin emcc web asset handling\n"
 		for outname, inname in pairs(files) do
-			inname = "../" .. inname
+			inname = "../../" .. inname
 
 			output = output .. "all: %{cfg.targetdir}/" .. outname .. "\n"
 			if outname == "index.html" then
-				output = output .. "%{cfg.targetdir}/" .. outname .. ': ' .. inname .. ' %{wks.location}/%{prj.name}.meta.json ../tools/build/embed-metadata.py\n'
+				output = output .. "%{cfg.targetdir}/" .. outname .. ': ' .. inname .. ' %{wks.location}/%{prj.name}.meta.json ../../tools/build/embed-metadata.py\n'
 				output = output .. "\t@echo " .. outname .. "\n"
-				output = output .. '\t$(SILENT) python3 ../tools/build/embed-metadata.py __HAMSANDWICH_METADATA__ %{wks.location}/%{prj.name}.meta.json <"$<" >"$@"\n'
+				output = output .. '\t$(SILENT) python3 ../../tools/build/embed-metadata.py __HAMSANDWICH_METADATA__ %{wks.location}/%{prj.name}.meta.json <"$<" >"$@"\n'
 			else
 				output = output .. "%{cfg.targetdir}/" .. outname .. ': ' .. inname .. '\n'
 				output = output .. "\t@echo " .. outname .. "\n"
